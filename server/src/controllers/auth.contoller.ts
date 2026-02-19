@@ -9,7 +9,7 @@ export class AuthController {
    */
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { email, password } = req.body;
+      const { email, password, businessProfile } = req.body;
 
       // Валідація вхідних даних
       if (!email || !password) {
@@ -23,7 +23,7 @@ export class AuthController {
       }
 
       // Створення користувача
-      const user = await authService.register(email, password);
+      const user = await authService.register(email, password, businessProfile);
 
       // Генерація токенів
       const tokens = authService.generateTokens(user._id.toString(), user.email);

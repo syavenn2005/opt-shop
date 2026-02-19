@@ -14,9 +14,9 @@ interface Config {
 }
 
 const config: Config = {
-  port: Number(process.env.PORT) || 3000,
+  port: Number(process.env.PORT) || 3001,
   nodeEnv: process.env.NODE_ENV || 'development',
-  mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/mydatabase',
+  mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/opt-shop',
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET || 'your-access-secret-key-change-in-production',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production',
   jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',

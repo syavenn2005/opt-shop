@@ -1,15 +1,51 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import config from './config/config.js';
 import authRoutes from './routes/auth.routes.js';
+import goodRoutes from './routes/good.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
+import userRoutes from './routes/user.routes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
+
+// CORS middleware
+const allowedOrigins = process.env.CLIENT_URL 
+  ? process.env.CLIENT_URL.split(',')
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Дозволяємо запити без origin (наприклад, з Postman або мобільних додатків)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // Дозволяємо cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Content-Length'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200, // Для старих браузерів
+}));
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Статичні файли для зображень (з папки utils/images)
+const imagesPath = join(process.cwd(), 'src', 'utils', 'images');
+app.use('/images', express.static(imagesPath));
 
 // Підключення до MongoDB
 mongoose
@@ -24,6 +60,9 @@ mongoose
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/goods', goodRoutes);
+app.use('/upload', uploadRoutes);
+app.use('/users', userRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

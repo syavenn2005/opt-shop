@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Step1 from '@/app/components/auth/Step1';
 import Step2 from '@/app/components/auth/Step2';
 import Step3 from '@/app/components/auth/Step3';
@@ -9,6 +10,7 @@ import LoginForm from '@/app/components/auth/LoginForm';
 type AuthMode = 'login' | 'register';
 
 export default function AuthPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('login');
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -23,9 +25,17 @@ export default function AuthPage() {
       phone: '',
       email: '',
     },
+    legalAddress: {
+      street: '',
+      city: '',
+      region: '',
+      postalCode: '',
+      country: 'Україна',
+    },
   });
 
   const totalSteps = 3;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -40,24 +50,144 @@ export default function AuthPage() {
   };
 
   const handleSubmit = async () => {
-    // Тут буде логіка відправки даних на сервер
-    console.log('Submitting form data:', formData);
-    // TODO: Викликати API для реєстрації
+    try {
+      // Валідація обов'язкових полів перед відправкою
+      if (!formData.companyName?.trim()) {
+        throw new Error('Назва компанії обов\'язкова');
+      }
+      if (!formData.phone?.trim()) {
+        throw new Error('Телефон компанії обов\'язковий');
+      }
+      if (!formData.contactPerson?.fullName?.trim()) {
+        throw new Error('ПІБ контактної особи обов\'язковий');
+      }
+      if (!formData.contactPerson?.position?.trim()) {
+        throw new Error('Посада контактної особи обов\'язкова');
+      }
+      if (!formData.contactPerson?.phone?.trim()) {
+        throw new Error('Телефон контактної особи обов\'язковий');
+      }
+      if (!formData.legalAddress?.street?.trim()) {
+        throw new Error('Вулиця юридичної адреси обов\'язкова');
+      }
+      if (!formData.legalAddress?.city?.trim()) {
+        throw new Error('Місто обов\'язкове');
+      }
+      if (!formData.legalAddress?.region?.trim()) {
+        throw new Error('Область обов\'язкова');
+      }
+      if (!formData.legalAddress?.postalCode?.trim()) {
+        throw new Error('Поштовий індекс обов\'язковий');
+      }
+      if (!formData.legalAddress?.country?.trim()) {
+        throw new Error('Країна обов\'язкова');
+      }
+
+      // Підготовка даних для реєстрації
+      const registrationData = {
+        email: formData.email,
+        password: formData.password,
+        businessProfile: {
+          companyName: formData.companyName.trim(),
+          phone: formData.phone.trim(),
+          contactPerson: {
+            fullName: formData.contactPerson.fullName.trim(),
+            position: formData.contactPerson.position.trim(),
+            phone: formData.contactPerson.phone.trim(),
+            email: formData.contactPerson.email?.trim() || undefined,
+          },
+          legalAddress: {
+            street: formData.legalAddress.street.trim(),
+            city: formData.legalAddress.city.trim(),
+            region: formData.legalAddress.region.trim(),
+            postalCode: formData.legalAddress.postalCode.trim(),
+            country: formData.legalAddress.country.trim(),
+          },
+        },
+      };
+
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Для отримання cookies
+        body: JSON.stringify(registrationData),
+      });
+
+      // Перевіряємо Content-Type перед парсингом JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Сервер повернув не JSON:', text.substring(0, 200));
+        throw new Error('Сервер повернув некоректну відповідь. Перевірте, чи запущено API сервер.');
+      }
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Помилка реєстрації');
+      }
+
+      const data = await response.json();
+      console.log('Реєстрація успішна:', data);
+
+      // Зберігаємо дані користувача
+      if (data.user?.id) {
+        localStorage.setItem('userId', data.user.id);
+      }
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+
+      // Редирект на сторінку товарів
+      router.push('/goods');
+    } catch (error) {
+      console.error('Помилка реєстрації:', error);
+      throw error;
+    }
   };
 
   const handleLogin = async (email: string, password: string) => {
-    // Тут буде логіка входу
-    console.log('Logging in with:', { email, password });
-    // TODO: Викликати API для входу
-    // Приклад:
-    // const response = await fetch('/api/auth/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email, password }),
-    // });
-    // if (!response.ok) throw new Error('Помилка входу');
-    // const data = await response.json();
-    // // Зберегти токен та перенаправити
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Для отримання cookies
+        body: JSON.stringify({ email, password }),
+      });
+
+      // Перевіряємо Content-Type перед парсингом JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Сервер повернув не JSON:', text.substring(0, 200));
+        throw new Error('Сервер повернув некоректну відповідь. Перевірте, чи запущено API сервер.');
+      }
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Помилка входу');
+      }
+
+      const data = await response.json();
+      console.log('Вхід успішний:', data);
+
+      // Зберігаємо дані користувача
+      if (data.user?.id) {
+        localStorage.setItem('userId', data.user.id);
+      }
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+
+      // Редирект на сторінку товарів
+      router.push('/goods');
+    } catch (error) {
+      console.error('Помилка входу:', error);
+      throw error;
+    }
   };
 
   const updateFormData = (field: string, value: any) => {

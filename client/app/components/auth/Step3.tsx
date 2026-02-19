@@ -11,13 +11,18 @@ interface Step3Props {
 
 export default function Step3({ formData, updateFormData, onSubmit, onBack }: Step3Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Симуляція затримки
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    onSubmit();
-    setIsSubmitting(false);
+    setError(null);
+    try {
+      await onSubmit();
+      // onSubmit тепер виконує редирект, тому тут нічого не робимо
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Помилка реєстрації');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -53,7 +58,7 @@ export default function Step3({ formData, updateFormData, onSubmit, onBack }: St
           </div>
         </div>
 
-        <div>
+        <div className="border-b pb-3">
           <h3 className="text-sm font-semibold text-gray-500 mb-2">Контактна особа</h3>
           <div className="space-y-1">
             <p className="text-gray-900">
@@ -72,6 +77,27 @@ export default function Step3({ formData, updateFormData, onSubmit, onBack }: St
             )}
           </div>
         </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">Юридична адреса</h3>
+          <div className="space-y-1">
+            <p className="text-gray-900">
+              <span className="font-medium">Вулиця:</span> {formData.legalAddress?.street || 'Не вказано'}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-medium">Місто:</span> {formData.legalAddress?.city || 'Не вказано'}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-medium">Область:</span> {formData.legalAddress?.region || 'Не вказано'}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-medium">Поштовий індекс:</span> {formData.legalAddress?.postalCode || 'Не вказано'}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-medium">Країна:</span> {formData.legalAddress?.country || 'Не вказано'}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -79,6 +105,12 @@ export default function Step3({ formData, updateFormData, onSubmit, onBack }: St
           <span className="font-semibold">Примітка:</span> Після реєстрації ви зможете додати додаткову інформацію про компанію, включаючи адреси, реєстраційні дані та бізнес-умови.
         </p>
       </div>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
       <div className="flex gap-3">
         <button

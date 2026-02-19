@@ -18,7 +18,7 @@ export class AuthService {
   /**
    * Реєстрація нового користувача
    */
-  async register(email: string, password: string): Promise<IUser> {
+  async register(email: string, password: string, businessProfile?: any): Promise<IUser> {
     // Перевірка чи користувач вже існує
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -28,11 +28,97 @@ export class AuthService {
     // Хешування пароля
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Створення нового користувача
-    const user = new User({
+    // Підготовка даних користувача
+    const userData: any = {
       email,
       password: hashedPassword,
-    });
+    };
+
+    // Розгортання businessProfile на верхній рівень, якщо він наданий
+    if (businessProfile) {
+      // Основна інформація про компанію
+      if (businessProfile.companyName) {
+        userData.companyName = businessProfile.companyName;
+      }
+      if (businessProfile.companyNameEn) {
+        userData.companyNameEn = businessProfile.companyNameEn;
+      }
+      if (businessProfile.description) {
+        userData.description = businessProfile.description;
+      }
+      if (businessProfile.website) {
+        userData.website = businessProfile.website;
+      }
+      if (businessProfile.logo) {
+        userData.logo = businessProfile.logo;
+      }
+      if (businessProfile.photos) {
+        userData.photos = businessProfile.photos;
+      }
+
+      // Контактна інформація
+      if (businessProfile.phone) {
+        userData.phone = businessProfile.phone;
+      }
+      if (businessProfile.additionalPhones) {
+        userData.additionalPhones = businessProfile.additionalPhones;
+      }
+      if (businessProfile.contactPerson) {
+        userData.contactPerson = businessProfile.contactPerson;
+      }
+
+      // Адреси
+      if (businessProfile.legalAddress) {
+        userData.legalAddress = businessProfile.legalAddress;
+      }
+      if (businessProfile.actualAddress) {
+        userData.actualAddress = businessProfile.actualAddress;
+      }
+
+      // Реєстраційні дані
+      if (businessProfile.edrpou) {
+        userData.edrpou = businessProfile.edrpou;
+      }
+      if (businessProfile.taxId) {
+        userData.taxId = businessProfile.taxId;
+      }
+      if (businessProfile.registrationDate) {
+        userData.registrationDate = businessProfile.registrationDate;
+      }
+      if (businessProfile.legalForm) {
+        userData.legalForm = businessProfile.legalForm;
+      }
+
+      // Бізнес-умови
+      if (businessProfile.businessTerms) {
+        userData.businessTerms = businessProfile.businessTerms;
+      }
+
+      // Категорії та спеціалізація
+      if (businessProfile.productCategories) {
+        userData.productCategories = businessProfile.productCategories;
+      }
+      if (businessProfile.specialization) {
+        userData.specialization = businessProfile.specialization;
+      }
+
+      // Статус та верифікація
+      if (businessProfile.isVerified !== undefined) {
+        userData.isVerified = businessProfile.isVerified;
+      }
+      if (businessProfile.isActive !== undefined) {
+        userData.isActive = businessProfile.isActive;
+      }
+      if (businessProfile.rating !== undefined) {
+        userData.rating = businessProfile.rating;
+      }
+      if (businessProfile.reviewsCount !== undefined) {
+        userData.reviewsCount = businessProfile.reviewsCount;
+      }
+    }
+
+    // Створення нового користувача
+    const user = new User(userData);
 
     await user.save();
     return user;
