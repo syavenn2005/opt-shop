@@ -9,6 +9,10 @@ import authRoutes from './routes/auth.routes.js';
 import goodRoutes from './routes/good.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import userRoutes from './routes/user.routes.js';
+import orderRoutes from './routes/order.routes.js';
+
+// Перевірка імпорту роутів
+console.log('orderRoutes imported:', typeof orderRoutes);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,6 +67,23 @@ app.use('/auth', authRoutes);
 app.use('/goods', goodRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/users', userRoutes);
+
+// Перевірка перед реєстрацією роутів замовлень
+if (!orderRoutes) {
+  console.error('ПОМИЛКА: orderRoutes не імпортовано!');
+} else {
+  console.log('Реєстрація роутів замовлень...');
+  app.use('/orders', orderRoutes);
+  console.log('Роути замовлень зареєстровані успішно');
+}
+
+// Логування для діагностики
+console.log('Всі роути зареєстровані:');
+console.log('  POST /orders - створення замовлення');
+console.log('  GET /orders/buyer/:buyerId - замовлення покупця');
+console.log('  GET /orders/supplier/:supplierId - замовлення постачальника');
+console.log('  GET /orders/:id - отримання замовлення');
+console.log('  PATCH /orders/:id/status - оновлення статусу');
 
 // Health check
 app.get('/health', (req, res) => {

@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface Good {
   _id: string;
@@ -40,14 +41,20 @@ interface GoodsListProps {
 }
 
 export default function GoodsList({ goods }: GoodsListProps) {
+  const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  const handleGoodClick = (goodId: string) => {
+    router.push(`/goods/${goodId}`);
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {goods.map((good) => (
         <div
           key={good._id}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-200"
+          onClick={() => handleGoodClick(good._id)}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-200 cursor-pointer"
         >
           {/* Фото товару */}
           <div className="relative h-48 bg-gray-200">
